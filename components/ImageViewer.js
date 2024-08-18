@@ -13,8 +13,8 @@ export default function ImageViewer({ placeholderImageSource, selectedImage }) {
 const styles = StyleSheet.create({
    image: {
       width: 320,
-      height: 550,
+      height: 500,
       borderRadius: 18,
-      objectFit: 'fill'
+      objectFit: 'contain'
    },
 })

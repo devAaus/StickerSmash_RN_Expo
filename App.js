@@ -15,7 +15,6 @@ import { captureRef } from 'react-native-view-shot';
 import { toast, Toasts } from '@backpackapp-io/react-native-toast';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-
 const PlaceholderImage = require('./assets/images/background-image.png')
 
 export default function App() {
@@ -25,7 +24,7 @@ export default function App() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [showAppOptions, setShowAppOptions] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [pickedEmoji, setPickedEmoji] = useState(null)
+  const [pickedEmojis, setPickedEmojis] = useState([]); // Change to array
   const [status, requestPermission] = MediaLibrary.usePermissions();
 
   const pickImage = async () => {
@@ -37,14 +36,15 @@ export default function App() {
     if (!result.canceled) {
       setSelectedImage(result.assets[0].uri)
       setShowAppOptions(true)
-
     } else {
       toast.error('You did not select any image')
     }
   }
 
   const onReset = () => {
-    setShowAppOptions(false)
+    setShowAppOptions(false);
+    setPickedEmojis([]);
+    setSelectedImage(null);
   }
 
   const onAddSticker = () => {
@@ -71,6 +71,10 @@ export default function App() {
     setIsModalVisible(false);
   };
 
+  const addEmoji = (emoji) => {
+    setPickedEmojis([...pickedEmojis, emoji]);
+  };
+
   if (status === null) {
     requestPermission();
   }
@@ -86,7 +90,13 @@ export default function App() {
                 placeholderImageSource={PlaceholderImage}
                 selectedImage={selectedImage}
               />
-              {pickedEmoji && <EmojiSticker imageSize={40} stickerSource={pickedEmoji} />}
+              {pickedEmojis.map((emoji, index) => (
+                <EmojiSticker
+                  key={index}
+                  imageSize={40}
+                  stickerSource={emoji}
+                />
+              ))}
             </View>
           </View>
           {showAppOptions ? (
@@ -104,7 +114,7 @@ export default function App() {
             </View>
           )}
           <EmojiPicker isVisible={isModalVisible} onClose={onModalClose}>
-            <EmojiList onSelect={setPickedEmoji} onCloseModal={onModalClose} />
+            <EmojiList onSelect={addEmoji} onCloseModal={onModalClose} />
           </EmojiPicker>
           <StatusBar style="light" />
         </View>
@@ -123,10 +133,8 @@ const styles = StyleSheet.create({
   imageContainer: {
     flex: 1,
     paddingTop: 58,
-
   },
   buttonContainer: {
-    // flex: 1 / 3,
     alignItems: 'center',
   },
   optionsContainer: {
