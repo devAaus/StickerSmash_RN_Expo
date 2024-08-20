@@ -1,3 +1,4 @@
+import { FlashList } from '@shopify/flash-list';
 import { useState } from 'react';
 import { StyleSheet, FlatList, Image, Platform, Pressable, View, ScrollView } from 'react-native';
 
@@ -24,25 +25,56 @@ const emojis = [
    require('../assets/images/emoji20.png'),
 ];
 
-export default function EmojiList({ onSelect, onCloseModal }) {
+export default function EmojiList({ onSelect }) {
    const [emoji] = useState(emojis);
 
    return (
-      <ScrollView>
-         <View style={styles.listContainer}>
-            {emoji.map((item) => (
-               <Pressable
-                  onPress={() => {
-                     onSelect(item);
-                     onCloseModal();
-                  }}
-                  key={item}
-               >
-                  <Image source={item} style={styles.image} />
-               </Pressable>
-            ))}
-         </View>
-      </ScrollView>
+      <View style={styles.listContainer}>
+         {emoji.map((item, index) => (
+            <Pressable
+               onPress={() => {
+                  onSelect(item);
+               }}
+               key={index}
+            >
+               <Image source={item} style={styles.image} />
+            </Pressable>
+         ))}
+      </View>
+
+      // <FlashList
+      //    renderItem={({ item, index }) => (
+      //       <Pressable
+      //          onPress={() => {
+      //             onSelect(item);
+      //          }}
+      //          key={index}
+      //       >
+      //          <Image source={item} style={styles.image} />
+      //       </Pressable>
+      //    )}
+      //    data={emoji}
+      //    estimatedItemSize={20}
+      //    contentContainerStyle={styles.listContainer}
+      //    showsHorizontalScrollIndicator={Platform.OS === 'web'}
+      //    horizontal
+      // />
+
+      // <FlatList
+      //    horizontal
+      //    showsHorizontalScrollIndicator={Platform.OS === 'web'}
+      //    data={emoji}
+      //    contentContainerStyle={styles.listContainer}
+      //    renderItem={({ item, index }) => (
+      //       <Pressable
+      //          onPress={() => {
+      //             onSelect(item);
+      //             onCloseModal();
+      //          }}>
+      //          <Image source={item} key={index} style={styles.image} />
+      //       </Pressable>
+      //    )}
+      // />
    );
 }
 
@@ -55,6 +87,6 @@ const styles = StyleSheet.create({
    image: {
       width: 50,
       height: 50,
-      margin: 10,
+      margin: 6,
    },
 });

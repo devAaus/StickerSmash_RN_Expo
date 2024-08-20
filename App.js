@@ -3,17 +3,17 @@ import { StyleSheet, Text, View } from 'react-native';
 import ImageViewer from './components/ImageViewer';
 import Button from './components/Button';
 import * as ImagePicker from 'expo-image-picker';
-import { useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import IconButton from './components/IconButton';
 import CircleButton from './components/CircleButton';
-import EmojiPicker from './components/EmojiPicker';
 import EmojiList from './components/EmojiList';
 import EmojiSticker from './components/EmojiSticker';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as MediaLibrary from 'expo-media-library';
 import { captureRef } from 'react-native-view-shot';
-import { toast, Toasts } from '@backpackapp-io/react-native-toast';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import BottomModal from './components/BottomModal';
+import Toast from 'react-native-toast-message';
 
 const PlaceholderImage = require('./assets/images/background-image.png')
 
@@ -23,8 +23,7 @@ export default function App() {
 
   const [selectedImage, setSelectedImage] = useState(null);
   const [showAppOptions, setShowAppOptions] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [pickedEmojis, setPickedEmojis] = useState([]); // Change to array
+  const [pickedEmojis, setPickedEmojis] = useState([]);
   const [status, requestPermission] = MediaLibrary.usePermissions();
 
   const pickImage = async () => {
@@ -37,7 +36,10 @@ export default function App() {
       setSelectedImage(result.assets[0].uri)
       setShowAppOptions(true)
     } else {
-      toast.error('You did not select any image')
+      Toast.show({
+        type: 'error',
+        text1: 'You did not select any image'
+      });
     }
   }
 
@@ -47,9 +49,6 @@ export default function App() {
     setSelectedImage(null);
   }
 
-  const onAddSticker = () => {
-    setIsModalVisible(true);
-  }
 
   const onSaveImage = async () => {
     try {
@@ -60,20 +59,29 @@ export default function App() {
 
       if (localUri) {
         await MediaLibrary.saveToLibraryAsync(localUri);
-        toast.success("Saved!");
+        Toast.show({
+          type: 'success',
+          text1: 'Saved'
+        });
       }
     } catch (e) {
       console.log(e);
     }
   };
 
-  const onModalClose = () => {
-    setIsModalVisible(false);
-  };
-
   const addEmoji = (emoji) => {
     setPickedEmojis([...pickedEmojis, emoji]);
   };
+
+
+  const bottomSheetModalRef = useRef(null);
+
+  const snapPoints = useMemo(() => ['25%', '50%'], []);
+
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
+
 
   if (status === null) {
     requestPermission();
@@ -82,7 +90,6 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={styles.container}>
-        <Toasts />
         <View style={styles.container}>
           <View style={styles.imageContainer}>
             <View ref={imageRef} collapsable={false}>
@@ -93,7 +100,7 @@ export default function App() {
               {pickedEmojis.map((emoji, index) => (
                 <EmojiSticker
                   key={index}
-                  imageSize={40}
+                  imageSize={60}
                   stickerSource={emoji}
                 />
               ))}
@@ -103,7 +110,7 @@ export default function App() {
             <View style={styles.optionsContainer}>
               <View style={styles.optionsRow}>
                 <IconButton icon="refresh" label="Reset" onPress={onReset} />
-                <CircleButton onPress={onAddSticker} />
+                <CircleButton onPress={handlePresentModalPress} />
                 <IconButton icon="save" label="Save" onPress={onSaveImage} />
               </View>
             </View>
@@ -113,11 +120,15 @@ export default function App() {
               <Button label="Use this photo" onPress={() => setShowAppOptions(true)} />
             </View>
           )}
-          <EmojiPicker isVisible={isModalVisible} onClose={onModalClose}>
-            <EmojiList onSelect={addEmoji} onCloseModal={onModalClose} />
-          </EmojiPicker>
+          <BottomModal
+            bottomSheetModalRef={bottomSheetModalRef}
+            snapPoints={snapPoints}
+          >
+            <EmojiList onSelect={addEmoji} />
+          </BottomModal>
           <StatusBar style="light" />
         </View>
+        <Toast />
       </GestureHandlerRootView>
     </SafeAreaProvider>
   );
